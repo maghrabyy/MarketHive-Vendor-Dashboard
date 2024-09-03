@@ -4,11 +4,10 @@ import { lazy } from 'react';
 import Loadable from 'components/Loadable';
 import Dashboard from 'layout/Dashboard';
 import ProtectedRoute from './protected-routes/ProtectedRoutes';
+import { UnCompleteRegRoute, CompletedRegRoute } from './protected-routes/uncompleteRegistrationRoute';
 
-const Color = Loadable(lazy(() => import('pages/component-overview/color')));
-const Typography = Loadable(lazy(() => import('pages/component-overview/typography')));
-const Shadow = Loadable(lazy(() => import('pages/component-overview/shadows')));
 const DashboardDefault = Loadable(lazy(() => import('pages/dashboard/index')));
+const AuthCreateStore = Loadable(lazy(() => import('pages/authentication/CreateStore')));
 
 // render - sample page
 const SamplePage = Loadable(lazy(() => import('pages/extra-pages/sample-page')));
@@ -18,39 +17,64 @@ const SamplePage = Loadable(lazy(() => import('pages/extra-pages/sample-page')))
 const MainRoutes = {
   path: '/',
   element: (
-    // <ProtectedRoute>
-    <Dashboard />
-    // </ProtectedRoute>
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
   ),
   children: [
     {
       path: '/',
-      element: <DashboardDefault />
+      element: (
+        <UnCompleteRegRoute>
+          <DashboardDefault />
+        </UnCompleteRegRoute>
+      )
     },
+
     {
-      path: 'color',
-      element: <Color />
+      path: '/create-store',
+      element: (
+        <CompletedRegRoute>
+          <AuthCreateStore />
+        </CompletedRegRoute>
+      )
     },
     {
       path: 'dashboard',
       children: [
         {
           path: 'default',
-          element: <DashboardDefault />
+          element: (
+            <UnCompleteRegRoute>
+              <DashboardDefault />
+            </UnCompleteRegRoute>
+          )
         }
       ]
     },
     {
-      path: 'sample-page',
-      element: <SamplePage />
+      path: 'orders',
+      element: (
+        <UnCompleteRegRoute>
+          <SamplePage />
+        </UnCompleteRegRoute>
+      )
     },
     {
-      path: 'shadow',
-      element: <Shadow />
+      path: 'products',
+      element: (
+        <UnCompleteRegRoute>
+          <SamplePage />
+        </UnCompleteRegRoute>
+      )
     },
     {
-      path: 'typography',
-      element: <Typography />
+      path: 'customers',
+      element: (
+        <UnCompleteRegRoute>
+          <SamplePage />
+        </UnCompleteRegRoute>
+      )
     }
   ]
 };

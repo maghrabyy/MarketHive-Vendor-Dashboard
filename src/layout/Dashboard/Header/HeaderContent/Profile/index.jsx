@@ -22,10 +22,12 @@ import Transitions from 'components/@extended/Transitions';
 
 // assets
 import LogoutOutlined from '@ant-design/icons/LogoutOutlined';
-import avatar1 from 'assets/images/users/avatar-1.png';
+import defaultStoreLogo from '../../../../../assets/images/store-default-logo.png';
 import { auth } from '../../../../../../firebase';
 import { useNavigate } from 'react-router';
 import { signOut } from 'firebase/auth';
+import { useFetchVendor } from 'Custom Hooks/useFetchVendor';
+import { useFetchStore } from 'Custom Hooks/useFetchStore';
 
 // tab panel wrapper
 function TabPanel({ children, value, index, ...other }) {
@@ -40,7 +42,8 @@ function TabPanel({ children, value, index, ...other }) {
 
 export default function Profile() {
   const theme = useTheme();
-
+  const { vendor, isVendorLoading } = useFetchVendor(auth.currentUser.uid);
+  const { store, isStoreLoading } = useFetchStore(vendor.storeId);
   const [authUser, setAuthUser] = useState();
   const navigate = useNavigate();
   useEffect(() => {
@@ -63,9 +66,11 @@ export default function Profile() {
     }
     setOpen(false);
   };
-
+  const storeLogoSrc = vendor.storeId ? (isStoreLoading ? null : store.logo) : defaultStoreLogo;
+  const vendorDisplayName = () => {
+    return auth.currentUser.displayName ? auth.currentUser.displayName : isVendorLoading ? 'Loading...' : vendor.vendorName;
+  };
   const iconBackColorOpen = 'grey.100';
-  console.log(auth.currentUser);
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <ButtonBase
@@ -83,9 +88,9 @@ export default function Profile() {
         onClick={handleToggle}
       >
         <Stack direction="row" spacing={1.25} alignItems="center" sx={{ p: 0.5 }}>
-          <Avatar alt="profile user" src={avatar1} size="sm" />
+          <Avatar alt="profile user" src={storeLogoSrc} size="sm" />
           <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>
-            {auth.currentUser?.displayName}
+            {vendorDisplayName()}
           </Typography>
         </Stack>
       </ButtonBase>
@@ -116,9 +121,12 @@ export default function Profile() {
                     <Grid container justifyContent="space-between" alignItems="center">
                       <Grid item>
                         <Stack direction="row" spacing={1.25} alignItems="center">
-                          <Avatar alt="profile user" src={avatar1} sx={{ width: 32, height: 32 }} />
+                          <Avatar alt="profile user" src={storeLogoSrc} sx={{ width: 32, height: 32 }} />
                           <Stack>
-                            <Typography variant="h6">{auth.currentUser?.displayName}</Typography>
+                            <Typography variant="h6">{vendorDisplayName()}</Typography>
+                            <Typography variant="body2" fontWeight="700" color="text.secondary">
+                              {store.name}
+                            </Typography>
                             <Typography variant="body2" color="text.secondary">
                               Store Owner
                             </Typography>

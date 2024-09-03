@@ -73,18 +73,22 @@ export default function AuthRegister() {
           password: Yup.string().max(255).required('Password is required')
         })}
         onSubmit={async ({ firstname, lastname, phone, email, password }) => {
-          const { user } = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, 'Vendors', user.uid), {
-            vendorEmail: email,
-            vendorName: firstname + ' ' + lastname,
-            vendorPhoneNum: phone,
-            storeId: '',
-            registrationDate: new Date()
-          });
-          await updateProfile(user, {
-            displayName: `${firstname} ${lastname}`
-          });
-          navigate('/');
+          try {
+            const { user } = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, 'Vendors', user.uid), {
+              vendorEmail: email,
+              vendorName: firstname + ' ' + lastname,
+              vendorPhoneNum: phone,
+              storeId: '',
+              registrationDate: new Date()
+            });
+            await updateProfile(user, {
+              displayName: `${firstname} ${lastname}`
+            });
+            navigate('/create-store');
+          } catch (error) {
+            console.log(error);
+          }
         }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
