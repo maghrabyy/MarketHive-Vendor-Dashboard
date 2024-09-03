@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 // material-ui
@@ -36,6 +36,7 @@ import { auth } from '../../../../firebase';
 export default function AuthLogin() {
   const [checked, setChecked] = React.useState(false);
   const navigate = useNavigate();
+  const [authError, setAuthError] = useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -58,8 +59,12 @@ export default function AuthLogin() {
           password: Yup.string().max(255).required('Password is required')
         })}
         onSubmit={async ({ email, password }) => {
-          await signInWithEmailAndPassword(auth, email, password);
-          navigate('/');
+          try {
+            await signInWithEmailAndPassword(auth, email, password);
+            navigate('/');
+          } catch (error) {
+            setAuthError('Incorrect email or password.');
+          }
         }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
@@ -67,6 +72,7 @@ export default function AuthLogin() {
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Stack spacing={1}>
+                  {authError && <div className="auth-error bg-red-500 rounded-md mb-2 p-2 text-white text-center">{authError}</div>}
                   <InputLabel htmlFor="email-login">Email Address</InputLabel>
                   <OutlinedInput
                     id="email-login"
