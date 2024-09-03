@@ -18,9 +18,9 @@ const SamplePage = Loadable(lazy(() => import('pages/extra-pages/sample-page')))
 const MainRoutes = {
   path: '/',
   element: (
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
+    // <ProtectedRoute>
+    <Dashboard />
+    // </ProtectedRoute>
   ),
   children: [
     {
