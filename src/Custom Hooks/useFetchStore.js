@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
-import { getDoc, doc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { db } from '../../firebase';
 
 export const useFetchStore = (storeId) => {
   const [store, setStore] = useState({});
   const [isStoreLoading, setIsStoreLoading] = useState(true);
-  const [storeError, setStoreError] = useState('');
+  const [storeError, setStoreError] = useState(false);
+
   useEffect(() => {
-    const fetchStore = async () => {
+    const fetchStore = () => {
       try {
-        const storeData = await getDoc(doc(db, 'Stores', storeId));
-        setStore({ ...storeData.data(), id: storeData.id });
-        setIsStoreLoading(false);
+        onSnapshot(doc(db, 'Stores', storeId), (onShot) => {
+          setStore({ ...onShot.data(), id: storeId });
+          setIsStoreLoading(false);
+        });
       } catch (error) {
         setStoreError(error.message);
       }

@@ -1,203 +1,159 @@
-import PropTypes from 'prop-types';
-// material-ui
-import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-
-// third-party
-import { NumericFormat } from 'react-number-format';
-
-// project import
-import Dot from 'components/@extended/Dot';
-
-function createData(tracking_no, name, fat, carbs, protein) {
-  return { tracking_no, name, fat, carbs, protein };
-}
-
-const rows = [
-  createData(84564564, 'Camera Lens', 40, 2, 40570),
-  createData(98764564, 'Laptop', 300, 0, 180139),
-  createData(98756325, 'Mobile', 355, 1, 90989),
-  createData(98652366, 'Handset', 50, 1, 10239),
-  createData(13286564, 'Computer Accessories', 100, 1, 83348),
-  createData(86739658, 'TV', 99, 0, 410780),
-  createData(13256498, 'Keyboard', 125, 2, 70999),
-  createData(98753263, 'Mouse', 89, 2, 10570),
-  createData(98753275, 'Desktop', 185, 1, 98063),
-  createData(98753291, 'Chair', 100, 0, 14001)
-];
-
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function stableSort(array, comparator) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) {
-      return order;
-    }
-    return a[1] - b[1];
-  });
-  return stabilizedThis.map((el) => el[0]);
-}
-
-const headCells = [
-  {
-    id: 'tracking_no',
-    align: 'left',
-    disablePadding: false,
-    label: 'Tracking No.'
-  },
-  {
-    id: 'name',
-    align: 'left',
-    disablePadding: true,
-    label: 'Product Name'
-  },
-  {
-    id: 'fat',
-    align: 'right',
-    disablePadding: false,
-    label: 'Total Order'
-  },
-  {
-    id: 'carbs',
-    align: 'left',
-    disablePadding: false,
-
-    label: 'Status'
-  },
-  {
-    id: 'protein',
-    align: 'right',
-    disablePadding: false,
-    label: 'Total Amount'
-  }
-];
-
-// ==============================|| ORDER TABLE - HEADER ||============================== //
-
-function OrderTableHead({ order, orderBy }) {
-  return (
-    <TableHead>
-      <TableRow>
-        {headCells.map((headCell) => (
-          <TableCell
-            key={headCell.id}
-            align={headCell.align}
-            padding={headCell.disablePadding ? 'none' : 'normal'}
-            sortDirection={orderBy === headCell.id ? order : false}
-          >
-            {headCell.label}
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-  );
-}
-
-function OrderStatus({ status }) {
-  let color;
-  let title;
-
-  switch (status) {
-    case 0:
-      color = 'warning';
-      title = 'Pending';
-      break;
-    case 1:
-      color = 'success';
-      title = 'Approved';
-      break;
-    case 2:
-      color = 'error';
-      title = 'Rejected';
-      break;
-    default:
-      color = 'primary';
-      title = 'None';
-  }
-
-  return (
-    <Stack direction="row" spacing={1} alignItems="center">
-      <Dot color={color} />
-      <Typography>{title}</Typography>
-    </Stack>
-  );
-}
-
-// ==============================|| ORDER TABLE ||============================== //
-
+import React, { useEffect, useState } from 'react';
+import { db } from '../../../firebase';
+import { Select } from 'antd';
+import { doc, onSnapshot, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
+import { useFetchVendor } from 'Custom Hooks/useFetchVendor';
+import { auth } from '../../../firebase';
+import { useFetchStore } from 'Custom Hooks/useFetchStore';
 export default function OrderTable() {
-  const order = 'asc';
-  const orderBy = 'tracking_no';
+  const [orders, setOrders] = useState([]);
+  const { vendor } = useFetchVendor(auth.currentUser.uid);
+  const { store } = useFetchStore(vendor.storeId);
+
+  // useEffect(() => {
+  //   const unsubscribeFns = store.orders.map((id) => {
+  //     const orderDocRef = doc(db, 'Orders', id);
+  //     return onSnapshot(orderDocRef, (snapshot) => {
+  //       const data = { ...snapshot.data(), id: snapshot.id };
+  //       console.log(data);
+  //       setOrders((prevOrders) => {
+  //         const orderExists = prevOrders.some((order) => order.id === data.id);
+  //         if (orderExists) {
+  //           return prevOrders?.map((order) => (order.id === data.id ? data : order));
+  //         } else {
+  //           return [...prevOrders, data];
+  //         }
+  //       });
+  //     });
+  //   });
+
+  //   return () => {
+  //     unsubscribeFns.forEach((unsub) => unsub());
+  //   };
+  // }, []);
+
+  async function handleStatusChange(orderId, newStatus) {
+    try {
+      const orderRef = doc(db, 'Orders', orderId);
+      await updateDoc(orderRef, {
+        orderHistory: arrayUnion({ orderStatus: newStatus, Date: new Date() })
+      });
+    } catch (error) {
+      console.error('Error updating order status: ', error);
+    }
+  }
 
   return (
-    <Box>
-      <TableContainer
-        sx={{
-          width: '100%',
-          overflowX: 'auto',
-          position: 'relative',
-          display: 'block',
-          maxWidth: '100%',
-          '& td, & th': { whiteSpace: 'nowrap' }
-        }}
-      >
-        <Table aria-labelledby="tableTitle">
-          <OrderTableHead order={order} orderBy={orderBy} />
-          <TableBody>
-            {stableSort(rows, getComparator(order, orderBy)).map((row, index) => {
-              const labelId = `enhanced-table-checkbox-${index}`;
-
-              return (
-                <TableRow
-                  hover
-                  role="checkbox"
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  tabIndex={-1}
-                  key={row.tracking_no}
-                >
-                  <TableCell component="th" id={labelId} scope="row">
-                    <Link color="secondary"> {row.tracking_no}</Link>
-                  </TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell align="right">{row.fat}</TableCell>
-                  <TableCell>
-                    <OrderStatus status={row.carbs} />
-                  </TableCell>
-                  <TableCell align="right">
-                    <NumericFormat value={row.protein} displayType="text" thousandSeparator prefix="$" />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+    <div className="relative overflow-x-auto">
+      <table className="w-full text-sm text-center rtl:text-right text-gray-500 ">
+        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+          <tr>
+            <th scope="col" className="py-3">
+              Order ID
+            </th>
+            <th scope="col" className="py-3 px-3">
+              Products
+            </th>
+            <th scope="col" className="py-3 px-4">
+              Customer Name
+            </th>
+            <th scope="col" className="py-3 px-3">
+              Address
+            </th>
+            <th scope="col" className="py-3 px-3">
+              Order Status
+            </th>
+            <th scope="col" className="py-3 px-3">
+              Payment Method
+            </th>
+            <th scope="col" className="py-3 px-3">
+              Total Amount
+            </th>
+            <th scope="col" className="py-3 px-3">
+              Update Status
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((order) => (
+            <OrderRow key={order.id} order={order} onStatusChange={handleStatusChange} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-OrderTableHead.propTypes = { order: PropTypes.any, orderBy: PropTypes.string };
+function OrderRow({ order, onStatusChange }) {
+  const [selectedStatus, setSelectedStatus] = useState(order.orderHistory[order.orderHistory.length - 1]?.orderStatus || 'pending');
 
-OrderStatus.propTypes = { status: PropTypes.number };
+  function handleChange(value) {
+    setSelectedStatus(value);
+    onStatusChange(order.id, value);
+  }
+
+  return (
+    <tr className="bg-white border-b ">
+      <th scope="row" className="px-1 py-4 font-medium text-gray-900 whitespace-nowrap ">
+        {order.id}
+      </th>
+      <td>
+        {order.products.map((item) => (
+          <ProductsDetails key={item.prodId} productId={item.prodId} />
+        ))}
+      </td>
+      <CustomerTd customerId={order.customerId} />
+      <td className="py-3 px-3">{order.destinationAddress.streetAddress}</td>
+      <td className="py-3 px-3">{order.orderHistory[order.orderHistory.length - 1]?.orderStatus}</td>
+      <td className="py-3 px-3">{order.paymentMethod}</td>
+      <td className="py-3 px-3">{order.totalAmount}</td>
+      <td className="py-3 px-3">
+        <Select value={selectedStatus} onChange={handleChange} style={{ width: 120 }}>
+          <Select.Option value="pending">Pending</Select.Option>
+          <Select.Option value="shipped">Shipped</Select.Option>
+          <Select.Option value="arrived">Arrived</Select.Option>
+          <Select.Option value="cancelled">Cancelled</Select.Option>
+          <Select.Option value="refund">Refund</Select.Option>
+        </Select>
+      </td>
+    </tr>
+  );
+}
+
+function CustomerTd({ customerId }) {
+  const [customerDetails, setCustomerDetails] = useState(null);
+
+  useEffect(() => {
+    async function fetchCustomerDetails() {
+      try {
+        const docRef = doc(db, 'Customers', customerId);
+        const docSnap = await getDoc(docRef);
+        setCustomerDetails(docSnap.data());
+      } catch (error) {
+        console.error('Error fetching customer details: ', error);
+      }
+    }
+    fetchCustomerDetails();
+  }, [customerId]);
+
+  return <td className="py-3 px-3">{customerDetails?.firstName + ' ' + customerDetails?.lastName}</td>;
+}
+
+function ProductsDetails({ productId }) {
+  const [productDetails, setProductDetails] = useState(null);
+
+  useEffect(() => {
+    async function fetchProductDetails() {
+      try {
+        const docRef = doc(db, 'Products', productId);
+        const docSnap = await getDoc(docRef);
+        setProductDetails(docSnap.data());
+      } catch (error) {
+        console.error('Error fetching product details: ', error);
+      }
+    }
+    fetchProductDetails();
+  }, [productId]);
+
+  return <div className="py-1 px-3">{productDetails?.title}</div>;
+}

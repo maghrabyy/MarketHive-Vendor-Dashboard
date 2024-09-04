@@ -3,19 +3,19 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  ///
-  apiKey: 'AIzaSyCNe-2bjODUuBu7PdcWbKJT6WFHW8HYD5Y',
-  authDomain: 'markethive-258a5.firebaseapp.com',
-  projectId: 'markethive-258a5',
-  storageBucket: 'markethive-258a5.appspot.com',
-  messagingSenderId: '363669259057',
-  appId: '1:363669259057:web:90472dc96bb7e191022610'
+  apiKey: 'AIzaSyB3YpaMtjcLBNF9V5S_T7O4ALpqxaLCOAM',
+  authDomain: 'markethive-recovery.firebaseapp.com',
+  projectId: 'markethive-recovery',
+  storageBucket: 'markethive-recovery.appspot.com',
+  messagingSenderId: '113383015154',
+  appId: '1:113383015154:web:8005a74f003b5b0932066b',
+  measurementId: 'G-JEZYYHVKGT'
 };
 
 // Initialize Firebase

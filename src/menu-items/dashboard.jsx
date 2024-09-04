@@ -38,6 +38,14 @@ const dashboard = {
       breadcrumbs: false
     },
     {
+      id: 'add-products',
+      title: 'Add Products',
+      type: 'item',
+      url: '/add-product',
+      icon: icons.DashboardOutlined,
+      breadcrumbs: false
+    },
+    {
       id: 'customers',
       title: 'Customers',
       type: 'item',
