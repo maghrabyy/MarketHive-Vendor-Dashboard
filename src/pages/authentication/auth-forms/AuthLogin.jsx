@@ -1,12 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-
+import { authErrors } from 'utils/authErrors';
 // material-ui
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
@@ -15,7 +12,6 @@ import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 
 // third party
 import * as Yup from 'yup';
@@ -27,14 +23,13 @@ import AnimateButton from 'components/@extended/AnimateButton';
 // assets
 import EyeOutlined from '@ant-design/icons/EyeOutlined';
 import EyeInvisibleOutlined from '@ant-design/icons/EyeInvisibleOutlined';
-import FirebaseSocial from './FirebaseSocial';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../../firebase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth, db } from '../../../../firebase';
+import { getDoc, doc } from 'firebase/firestore';
 
 // ============================|| JWT - LOGIN ||============================ //
 
 export default function AuthLogin() {
-  const [checked, setChecked] = React.useState(false);
   const navigate = useNavigate();
   const [authError, setAuthError] = useState('');
   const [showPassword, setShowPassword] = React.useState(false);
@@ -61,9 +56,15 @@ export default function AuthLogin() {
         onSubmit={async ({ email, password }) => {
           try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/');
+            const vendorDoc = await getDoc(doc(db, 'Vendors', auth.currentUser.uid));
+            if (vendorDoc.exists()) {
+              navigate('/');
+            } else {
+              signOut(auth);
+              setAuthError('Unauthorized access.');
+            }
           } catch (error) {
-            setAuthError('Incorrect email or password.');
+            setAuthError(authErrors[error.code] ?? 'Unable to login, try again later.');
           }
         }}
       >
@@ -129,18 +130,6 @@ export default function AuthLogin() {
 
               <Grid item xs={12} sx={{ mt: -1 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={checked}
-                        onChange={(event) => setChecked(event.target.checked)}
-                        name="checked"
-                        color="primary"
-                        size="small"
-                      />
-                    }
-                    label={<Typography variant="h6">Keep me sign in</Typography>}
-                  />
                   <Link variant="h6" component={RouterLink} color="text.primary">
                     Forgot Password?
                   </Link>
@@ -157,14 +146,6 @@ export default function AuthLogin() {
                     Login
                   </Button>
                 </AnimateButton>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider>
-                  <Typography variant="caption"> Login with</Typography>
-                </Divider>
-              </Grid>
-              <Grid item xs={12}>
-                <FirebaseSocial />
               </Grid>
             </Grid>
           </form>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { authErrors } from 'utils/authErrors';
 
 // material-ui
 import Button from '@mui/material/Button';
@@ -35,6 +36,8 @@ import { doc, setDoc } from 'firebase/firestore';
 export default function AuthRegister() {
   const [level, setLevel] = useState();
   const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState('');
+
   const navigate = useNavigate();
   const phoneReg = /^01[0125][0-9]{8}$/gm;
   const handleClickShowPassword = () => {
@@ -87,13 +90,16 @@ export default function AuthRegister() {
             });
             navigate('/create-store');
           } catch (error) {
-            console.log(error);
+            setAuthError(authErrors[error.code] ?? 'Unable to register, try again later.');
           }
         }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit}>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+                {authError && <div className="auth-error bg-red-500 rounded-md mb-2 p-2 text-white text-center">{authError}</div>}
+              </Grid>
               <Grid item xs={12} md={6}>
                 <Stack spacing={1}>
                   <InputLabel htmlFor="firstname-signup">First Name*</InputLabel>
@@ -104,7 +110,7 @@ export default function AuthRegister() {
                     name="firstname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="John"
+                    placeholder="First Name"
                     fullWidth
                     error={Boolean(touched.firstname && errors.firstname)}
                   />
@@ -127,7 +133,7 @@ export default function AuthRegister() {
                     name="lastname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="Doe"
+                    placeholder="Last Name"
                     inputProps={{}}
                   />
                 </Stack>

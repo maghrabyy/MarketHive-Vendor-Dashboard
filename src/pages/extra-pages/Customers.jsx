@@ -8,7 +8,6 @@ function Customers() {
   const { vendor } = useFetchVendor(auth.currentUser.uid);
   const { store } = useFetchStore(vendor?.storeId);
   const { customer } = useCustomerSnapshot(store?.customers);
-
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
@@ -38,32 +37,35 @@ function Customers() {
           </tr>
         </thead>
         <tbody>
-          {customer.map((item) => (
-            <tr key={item.id} className="bg-white border-b ">
-              <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                {item.id}
-              </th>
-              <td className="px-6 py-4">
-                {item.firstName} {item.lastName}
-              </td>
-              <td className="px-6 py-4">{item.phoneNumber}</td>
-              <td className="px-6 py-4">{item.email}</td>
-              <td className="px-6 py-4">
-                {item.address.streetAddress}, {item.address.city}
-              </td>
-              <td className="px-6 py-4">{item.orders.length}</td>
-              <td className="px-6 py-4">
-                {item.registrationDate.toDate().toLocaleString('en-AU', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                  hour12: true,
-                  minute: 'numeric',
-                  hour: 'numeric'
-                })}
-              </td>
-            </tr>
-          ))}
+          {customer.map((item) => {
+            const filterOrdersCount = item.orders.filter((id) => store.orders.includes(id));
+            return (
+              <tr key={item.id} className="bg-white border-b ">
+                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                  {item.id}
+                </th>
+                <td className="px-6 py-4">
+                  {item.firstName} {item.lastName}
+                </td>
+                <td className="px-6 py-4">{item.phoneNumber}</td>
+                <td className="px-6 py-4">{item.email}</td>
+                <td className="px-6 py-4">
+                  {item.address.streetAddress}, {item.address.city}
+                </td>
+                <td className="px-6 py-4">{filterOrdersCount.length}</td>
+                <td className="px-6 py-4">
+                  {item.registrationDate.toDate().toLocaleString('en-AU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour12: true,
+                    minute: 'numeric',
+                    hour: 'numeric'
+                  })}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
