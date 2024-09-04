@@ -22,14 +22,18 @@ export const useFetchCustomer = (customerId) => {
   return { customer, isLoading, error };
 };
 export const useCustomerSnapshot = (customerId) => {
-  const [customer, setCustomer] = useState({});
+  const [customer, setCustomer] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
+    const arrayOfCustomers = [];
     const fetchCustomer = async () => {
       try {
-        onSnapshot(doc(db, 'Customers', customerId), (customerSnapshot) => {
-          setCustomer({ ...customerSnapshot.data(), id: customerSnapshot.id });
+        customerId.map((customer) => {
+          onSnapshot(doc(db, 'Customers', customer), (onShot) => {
+            arrayOfCustomers.push({ id: customer, ...onShot.data() });
+            setCustomer(arrayOfCustomers);
+          });
           setIsLoading(false);
         });
       } catch (error) {
