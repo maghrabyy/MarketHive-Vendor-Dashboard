@@ -21,14 +21,7 @@ const dashboard = {
       icon: icons.DashboardOutlined,
       breadcrumbs: false
     },
-    {
-      id: 'orders',
-      title: 'Orders',
-      type: 'item',
-      url: '/orders',
-      icon: icons.DashboardOutlined,
-      breadcrumbs: false
-    },
+
     {
       id: 'products',
       title: 'Products',

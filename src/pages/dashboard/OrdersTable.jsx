@@ -4,33 +4,49 @@ import { Select } from 'antd';
 import { doc, onSnapshot, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
 import { useFetchVendor } from 'Custom Hooks/useFetchVendor';
 import { auth } from '../../../firebase';
-import { useFetchStore } from 'Custom Hooks/useFetchStore';
+
 export default function OrderTable() {
+  const [orderIds, setOrderIds] = useState([]);
   const [orders, setOrders] = useState([]);
   const { vendor } = useFetchVendor(auth.currentUser.uid);
-  const { store } = useFetchStore(vendor.storeId);
 
-  // useEffect(() => {
-  //   const unsubscribeFns = store.orders.map((id) => {
-  //     const orderDocRef = doc(db, 'Orders', id);
-  //     return onSnapshot(orderDocRef, (snapshot) => {
-  //       const data = { ...snapshot.data(), id: snapshot.id };
-  //       console.log(data);
-  //       setOrders((prevOrders) => {
-  //         const orderExists = prevOrders.some((order) => order.id === data.id);
-  //         if (orderExists) {
-  //           return prevOrders?.map((order) => (order.id === data.id ? data : order));
-  //         } else {
-  //           return [...prevOrders, data];
-  //         }
-  //       });
-  //     });
-  //   });
+  useEffect(() => {
+    async function fetchOrderIds() {
+      try {
+        const docRef = doc(db, 'Stores', vendor.storeId);
+        const docSnap = await getDoc(docRef);
+        const storeData = docSnap.data();
+        setOrderIds(storeData?.orders || []);
+      } catch (error) {
+        console.error('Error fetching order IDs: ', error);
+      }
+    }
 
-  //   return () => {
-  //     unsubscribeFns.forEach((unsub) => unsub());
-  //   };
-  // }, []);
+    fetchOrderIds();
+  }, [vendor.storeId]);
+
+  useEffect(() => {
+    if (orderIds.length === 0) return; // Do nothing if there are no order IDs
+
+    const unsubscribeFns = orderIds.map((id) => {
+      const orderDocRef = doc(db, 'Orders', id);
+      return onSnapshot(orderDocRef, (snapshot) => {
+        const data = { ...snapshot.data(), id: snapshot.id };
+        setOrders((prevOrders) => {
+          const orderExists = prevOrders.some((order) => order.id === data.id);
+          if (orderExists) {
+            return prevOrders.map((order) => (order.id === data.id ? data : order));
+          } else {
+            return [...prevOrders, data];
+          }
+        });
+      });
+    });
+
+    return () => {
+      unsubscribeFns.forEach((unsub) => unsub());
+    };
+  }, [orderIds]); // Only re-subscribe when orderIds change.
 
   async function handleStatusChange(orderId, newStatus) {
     try {
@@ -46,7 +62,7 @@ export default function OrderTable() {
   return (
     <div className="relative overflow-x-auto">
       <table className="w-full text-sm text-center rtl:text-right text-gray-500 ">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+        <thead className="text-xs text-gray-700 uppercase bg-gray-50 ">
           <tr>
             <th scope="col" className="py-3">
               Order ID
